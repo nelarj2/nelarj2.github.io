@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mean Temperature Change Visualization</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="text-align: center;"></h1>
+        <div id="visualization"></div>
+        <div class="nav-buttons">
+            <button id="prev" class="btn">Previous</button>
+            <button id="next" class="btn">Next</button>
+        </div>
+        <div class="filter-container">
+            <label style="font-size: 20px" for="countryFilter">Filter by Country:</label>
+            <select id="countryFilter"></select>
+        </div>
+    </div>
+    <div id="tooltip"
+        style="position: absolute; text-align: center; width: 60px; height: 28px; padding: 2px; font: 12px sans-serif; background: lightsteelblue; border: 0px; border-radius: 8px; pointer-events: none; opacity: 0;">
+    </div>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

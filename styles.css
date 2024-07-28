@@ -1,0 +1,50 @@
+.container {
+    /* width: 80%; */
+    margin: auto;
+    text-align: center;
+    /* height: 80vh; */
+    zoom: .76;
+}
+
+.nav-buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.filter-container {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.grid line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+}
+
+.grid path {
+    stroke-width: 0;
+}
+
+.btn {
+    color: white;
+    width: 119px;
+    background: #0362c2;
+    border-radius: 5px;
+    height: 46px;
+    border: none;
+    zoom: 1.1;
+}
+
+.btn:hover{
+    background: #004c97;
+}
+
+.filter-container{
+    /* width: ; */
+    zoom: 1.4;
+}
+
+
+/* 004c97 */
