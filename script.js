@@ -11,9 +11,30 @@ const svg = d3.select("#visualization")
     .attr("width", width)
     .attr("height", height);
 
+const topCountries = {};
+
+// Calculate the top 5 countries for each year
+d3.csv("temp_data.csv").then(data => {
+    years.forEach(year => {
+        const yearKey = `F${year}`;
+        const sortedData = data.sort((a, b) => d3.descending(+a[yearKey], +b[yearKey]));
+        const top5 = sortedData.slice(0, 5).map(d => d.Country);
+
+        top5.forEach(country => {
+            if (!topCountries[country]) {
+                topCountries[country] = [];
+            }
+            topCountries[country].push(year);
+        });
+    });
+
+    // After populating the topCountries object, draw the initial plot
+    drawBarPlot(years[currentYearIndex]);
+});
+
+console.log("topCountries",topCountries)
 function drawBarPlot(year, country = null) {
-    // Clear previous visualization
-    svg.selectAll("*").remove();
+   svg.selectAll("*").remove();
 
     d3.select("h1").text(`Top 5 Countries with Highest Temperature Change in ${year}`);
 
@@ -103,8 +124,7 @@ function drawBarPlot(year, country = null) {
                 }
                 return heightValue;
             })
-            .attr("fill", d => d[yearKey] >= 0 ? "rgb(0, 197, 255)" : "red");
-
+            .attr("fill", d => d[yearKey] >= 0 ? "#d96f6f":"rgb(0, 197, 255)");
         // Draw labels
         svg.selectAll(".label")
             .data(filteredData)
@@ -117,73 +137,99 @@ function drawBarPlot(year, country = null) {
             .style("fill", "black") // Set the color of the text
             .text(d => d[yearKey] + "°C"); // Display the value
 
-      // Add y-axis label
-    svg.append("text")
-        .attr("transform", "rotate(-90)") // Rotate the text to be vertical
-        .attr("x", -margin.top - (height / 2)) // Adjust positioning from the left edge
-        .attr("y", margin.left / 2 - (margin.top / 2)) // Position the text properly from the top edge
-        .attr("text-anchor", "middle")
-        .style("font-size", "16px")
-        .style("font-family", "Arial")
-        .style("fill", "black")
-        .text("Change °C from 1951-1980 baseline");
-
-       // Add annotation
+        // Add y-axis label
         svg.append("text")
-            .attr("x", width - margin.right + 10) // Position it slightly to the right of the plot area
-            .attr("y", margin.top + 20) // Adjust vertical positioning
-            .attr("text-anchor", "start")
+            .attr("transform", "rotate(-90)") // Rotate the text to be vertical
+            .attr("x", -margin.top - (height / 2)) // Adjust positioning from the left edge
+            .attr("y", margin.left / 2 - (margin.top / 2)) // Position the text properly from the top edge
+            .attr("text-anchor", "middle")
             .style("font-size", "16px")
             .style("font-family", "Arial")
             .style("fill", "black")
-            .style("text-align", "left")
-            .text("This metric shows the mean surface temperature change relative to the baseline period from 1951 to 1980. Positive values indicate a temperature increase, while negative values represent a temperature decrease.")
-            .call(wrap, 190); // Call the wrap function to fit the annotation within the space
-   
+            .text("Change °C from 1951-1980 baseline");
 
-    //    // Add annotation
-    //     svg.append("text")
-    //         .attr("x", width - margin.right + 10) // Position it slightly to the right of the plot area
-    //         .attr("y", margin.top + 200) // Adjust vertical positioning
-    //         .attr("text-anchor", "start")
-    //         .style("font-size", "16px")
-    //         .style("font-family", "Arial")
-    //         .style("fill", "black")
-    //         .style("text-align", "left")
-    //         .text("Year in this context means meteorological years (which spans from October to September of the following year).")
-    //         .call(wrap, 190); // Call the wrap function to fit the annotation within the space
-   
-
-
-        // Add annotation for global temperature change
+  // Add global temperature change annotation
         const globalTempChange = data.find(d => d.Country === "World")[yearKey];
-        svg.append("text")
-            .attr("class", "annotation")
-            .attr("x", width - margin.right-26)
-            .attr("y", margin.top+25)
-            .attr("text-anchor", "end")
-            .style("font-size", "17px")
-            .style("font-family", "Arial")
-            .style("fill", "black")
-            .text(`Global Temp Change ${year}: ${globalTempChange}°C`);
+        if (globalTempChange) {
+            svg.append("text")
+                .attr("x", width - margin.right + 10) // Position it slightly to the right of the plot area
+                .attr("y", margin.top + 10) // Adjust vertical positioning
+                .attr("text-anchor", "start")
+                .style("font-size", "18px")
+                .style("font-family", "Arial")
+                .style("fill", "black")
+                .style("text-align", "left")
+                .text(`The global temperature has risen by ${globalTempChange}°C for the year of ${year} compared to the 1951-1980 baseline.`)
+                .call(wrap2,190)
+    }
+    
+   // Check if the annotation should be displayed
+        let annotationText = "";
+        const filteredCountries = filteredData.map(d => d.Country);
+
+        for (const [country, years] of Object.entries(topCountries)) {
+            if (years.length > 1 && filteredCountries.includes(country)) {
+                annotationText += `\n${country}: ${years.join(", ")}\n`;
+            }
+        }
+
+        if (annotationText !== "") {
+
+            const globalTempChange = data.find(d => d.Country === "World")[yearKey];
+                    if (globalTempChange) {
+                        svg.append("text")
+                            .attr("x", width - margin.right + 10) // Position it slightly to the right of the plot area
+                            .attr("y", margin.top + 150) // Adjust vertical positioning
+                            .attr("text-anchor", "start")
+                            .style("font-size", "18px")
+                            .style("font-family", "Arial")
+                            .style("fill", "black")
+                            .style("text-align", "left")
+                            .text(`Countries Repeatedly Ranking in the Top 5 for Temperature Increase (2018-2022):`)
+                            .call(wrap2, 190); // Call the wrap function to fit the annotation within the space
+                    }
 
 
- });
+            // Add annotation to the plot
+            const lines = annotationText.split('\n');
+
+            const textElement = svg.append("text")
+                .attr("x", width - margin.right + 10) // Position it slightly to the right of the plot area
+                .attr("y", margin.top + 220) // Adjust vertical positioning
+                .attr("text-anchor", "start")
+                .style("font-size", "18px")
+                .style("font-family", "Arial")
+                .style("fill", "black")
+                .style("text-align", "left");
+
+            // Append each line as a separate tspan element
+            textElement.selectAll("tspan")
+                .data(lines)
+                .enter()
+                .append("tspan")
+                .attr("x", textElement.attr("x"))
+                .attr("dy", (d, i) => i === 0 ? 0 : "1.2em") // Add space between lines
+                .text(d => d)
+                .call(wrap,190);
+        }
+
+   });
+
+
+
 }
+function wrap2(text, width) {
+    text.each(function () {
+        const text = d3.select(this);
+        const words = text.text().split(/\s+/).reverse();
+        let word;
+        let line = [];
+        let lineNumber = 0;
+        const lineHeight = 1.1; // ems
+        const y = text.attr("y");
+        const dy = parseFloat(text.attr("dy") || 0);
+        let tspan = text.text(null).append("tspan").attr("x", text.attr("x")).attr("y", y).attr("dy", dy + "em");
 
-// Function to wrap text within a specified width
-function wrap(text, width) {
-    text.each(function() {
-        var text = d3.select(this),
-            words = text.text().split(/\s+/).reverse(),
-            word,
-            line = [],
-            lineNumber = 0,
-            lineHeight = 1.1, // ems
-            x = text.attr("x"),
-            y = text.attr("y"),
-            dy = parseFloat(text.attr("dy")) || 0,
-            tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
         while (word = words.pop()) {
             line.push(word);
             tspan.text(line.join(" "));
@@ -191,11 +237,37 @@ function wrap(text, width) {
                 line.pop();
                 tspan.text(line.join(" "));
                 line = [word];
-                tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+                tspan = text.append("tspan").attr("x", text.attr("x")).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
             }
         }
     });
 }
+
+function wrap(text, width) {
+    text.each(function () {
+        const text = d3.select(this);
+        const words = text.text().split(/\s+/).reverse();
+        let word;
+        let line = [];
+        let lineNumber = 0;
+        const lineHeight = 0; // ems
+        const y = text.attr("y");
+        const dy = parseFloat(text.attr("dy") || 0);
+        let tspan = text.text(null).append("tspan").attr("x", text.attr("x")).attr("y", y).attr("dy", dy + "em");
+
+        while (word = words.pop()) {
+            line.push(word);
+            tspan.text(line.join(" "));
+            if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                tspan.text(line.join(" "));
+                line = [word];
+                tspan = text.append("tspan").attr("x", text.attr("x")).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+            }
+        }
+    });
+}
+
 // Define the years array to include all years from 1961 to 2022
 const years_2 = d3.range(1961, 2023); // Generates an array from 1961 to 2022
 function drawInteractivePlot() {
@@ -322,12 +394,12 @@ function updateBarsForCountry(data, selectedCountry, x, y) {
             }
             return heightValue;
         })
-        .attr("fill", d => d.value >= 0 ? "rgb(0, 197, 255)" : "red")
+        .attr("fill", d => d.value >= 0 ? "#d96f6f":"rgb(0, 197, 255)")
         .on("mouseover", function (event, d) {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
-                    tooltip.html(`${d.year}: ${d.value}`)
+                    tooltip.html(`${d.year}: ${d.value}°C`)
                         .style("left", (event.pageX) + "px")
                         .style("top", (event.pageY - 28) + "px");
                 })
@@ -336,17 +408,9 @@ function updateBarsForCountry(data, selectedCountry, x, y) {
                 .duration(500)
                 .style("opacity", 0);
         });
- svg.append("text")
-            .attr("x", width - margin.right + 10) // Position it slightly to the right of the plot area
-            .attr("y", margin.top + 20) // Adjust vertical positioning
-            .attr("text-anchor", "start")
-            .style("font-size", "16px")
-            .style("font-family", "Arial")
-            .style("fill", "black")
-            .style("text-align", "left")
-            .text("This metric shows the mean surface temperature change relative to the baseline period from 1951 to 1980. Positive values indicate a temperature increase, while negative values represent a temperature decrease.")
-            .call(wrap, 190); // Call the wrap function to fit the annotation within the space
-    bars.exit().remove();
+
+
+ars.exit().remove();
 }
 
 function updateVisualization() {
