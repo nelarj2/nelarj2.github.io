@@ -15,7 +15,7 @@ function drawBarPlot(year, country = null) {
     // Clear previous visualization
     svg.selectAll("*").remove();
 
-    d3.select("h1").text(`Top 5 Countries With the Highest Mean Temperature Change in ${year}`);
+    d3.select("h1").text(`Top 5 Countries with Highest Temperature Change in ${year}`);
 
     // Load data and filter for the top 5 countries with the highest temperature change
     d3.csv("temp_data.csv").then(data => {
@@ -137,23 +137,35 @@ function drawBarPlot(year, country = null) {
             .style("font-family", "Arial")
             .style("fill", "black")
             .style("text-align", "left")
-            .text("This metric represents the mean surface temperature change, using temperatures between 1951 and 1980 as a baseline.")
+            .text("This metric shows the mean surface temperature change relative to the baseline period from 1951 to 1980. Positive values indicate a temperature increase, while negative values represent a temperature decrease.")
             .call(wrap, 190); // Call the wrap function to fit the annotation within the space
    
 
-        // Calculate and display the global average temperature change for the year
-        const globalAvgTempChange = d3.mean(data, d => +d[yearKey]);
-        
+    //    // Add annotation
+    //     svg.append("text")
+    //         .attr("x", width - margin.right + 10) // Position it slightly to the right of the plot area
+    //         .attr("y", margin.top + 200) // Adjust vertical positioning
+    //         .attr("text-anchor", "start")
+    //         .style("font-size", "16px")
+    //         .style("font-family", "Arial")
+    //         .style("fill", "black")
+    //         .style("text-align", "left")
+    //         .text("Year in this context means meteorological years (which spans from October to September of the following year).")
+    //         .call(wrap, 190); // Call the wrap function to fit the annotation within the space
+   
+
+
+        // Add annotation for global temperature change
+        const globalTempChange = data.find(d => d.Country === "World")[yearKey];
         svg.append("text")
-            .attr("x", width - margin.right-26) // Position it on the right side of the plot
-            .attr("y", margin.top+25) // Position it near the top
-            .attr("text-anchor", "end") // Align text to the end
-            .style("font-size", "16px")
+            .attr("class", "annotation")
+            .attr("x", width - margin.right-26)
+            .attr("y", margin.top+25)
+            .attr("text-anchor", "end")
+            .style("font-size", "17px")
             .style("font-family", "Arial")
             .style("fill", "black")
-            .text(`Global Average for ${year}: ${globalAvgTempChange.toFixed(2)}°C`);
-
-
+            .text(`Global Temp Change ${year}: ${globalTempChange}°C`);
 
 
  });
@@ -190,7 +202,7 @@ function drawInteractivePlot() {
     // Clear previous visualization
     svg.selectAll("*").remove();
 
-    d3.select("h1").text("Mean Temperature Change of Meteorological year by Country");
+    d3.select("h1").text("Mean Temperature Change by Country");
 
     d3.select(".filter-container").style("display", "block");
 
@@ -332,7 +344,7 @@ function updateBarsForCountry(data, selectedCountry, x, y) {
             .style("font-family", "Arial")
             .style("fill", "black")
             .style("text-align", "left")
-            .text("This metric represents the mean surface temperature change, using temperatures between 1951 and 1980 as a baseline.")
+            .text("This metric shows the mean surface temperature change relative to the baseline period from 1951 to 1980. Positive values indicate a temperature increase, while negative values represent a temperature decrease.")
             .call(wrap, 190); // Call the wrap function to fit the annotation within the space
     bars.exit().remove();
 }
